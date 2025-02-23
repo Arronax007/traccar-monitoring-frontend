@@ -19,6 +19,9 @@ class GpsService {
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
+            debug: (str) => {
+                console.log('STOMP:', str);
+            },
         });
 
         this.stompClient.onConnect = () => {
@@ -38,7 +41,9 @@ class GpsService {
     private subscribeToDevice(deviceId: string, callback: (data: GpsData) => void) {
         if (!this.stompClient?.connected) return;
 
+        console.log(`Subscribing to device ${deviceId}`);
         this.stompClient.subscribe(`/topic/gps/${deviceId}`, (message) => {
+            console.log(`Received position update for device ${deviceId}:`, message.body);
             const data: GpsData = JSON.parse(message.body);
             callback(data);
         });
