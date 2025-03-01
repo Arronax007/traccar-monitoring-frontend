@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Map } from './components/Map';
 import { DeviceControl } from './components/DeviceControl';
+import { DeviceTable } from './components/DeviceTable';
 import { gpsService } from './services/GpsService';
 import { GpsData } from './types/GpsData';
+import { DeviceStatus } from './types/DeviceStatus';
 import './App.css';
 
 function App() {
   const [devices, setDevices] = useState<GpsData[]>([]);
+  const [devicesStatus, setDevicesStatus] = useState<Record<string, DeviceStatus>>({});
 
   const updateDevices = async () => {
     try {
-      const positions = await gpsService.getCurrentPositions();
+      const [positions, status] = await Promise.all([
+        gpsService.getCurrentPositions(),
+        gpsService.getDevicesStatus()
+      ]);
       setDevices(positions);
+      setDevicesStatus(status);
     } catch (error) {
-      console.error('Error fetching device positions:', error);
+      console.error('Error fetching device data:', error);
     }
   };
 
@@ -21,8 +28,8 @@ function App() {
     // Initial fetch
     updateDevices();
 
-    // Update every 5 seconds
-    const interval = setInterval(updateDevices, 5000);
+    // Update every 3 seconds
+    const interval = setInterval(updateDevices, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -36,6 +43,7 @@ function App() {
       <div className="flex-1 flex">
         <div className="w-1/4 p-4 bg-gray-100">
           <DeviceControl onDeviceUpdate={updateDevices} />
+          <DeviceTable devices={devicesStatus} />
         </div>
         
         <div className="w-3/4">
